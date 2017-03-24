@@ -1,1 +1,1 @@
-# sqectz_site
+# spectz_site
