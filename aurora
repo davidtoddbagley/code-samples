@@ -1,0 +1,33 @@
+var DB = MYSQL.createConnection({
+                                      host : AURORA___ENDP
+                                ,     user : AURORA___USER
+                                , password : AURORA___PASS
+                                ,     port : 3306
+});
+DBM.connect(function(err) {
+  if (err) {
+    console.log('mysql aurora MASTER connection failed...')
+    console.log(err);
+    throw err
+  } else {
+    console.log('mysql aurora MASTER connection running...')
+  }
+});
+global.DBM = DBM ;
+
+var DBR = MYSQL.createConnection({
+                                      host : AURORA_R_ENDP
+                                ,     user : AURORA_R_USER
+                                , password : AURORA_R_PASS
+                                ,     port : 3306
+});
+DBR.connect(function(err) {
+  if (err) {
+    console.log('mysql aurora READ connection failed...')
+    console.log(err);
+    throw err
+  } else {
+    console.log('mysql aurora READ connection running...')
+  }
+});
+global.DBR = DBR ;
