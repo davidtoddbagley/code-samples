@@ -4,7 +4,7 @@ var from = 'sender@friends.com'
   , html = 'hello<br>world'
   , ascii = html.replace(/<br>/g,"\r\n")
 
-Email.Send(from,to,subject,ascii,html,function(res){ // see file "javascript_class"
+Email.Send(from,to,subject,ascii,html,function(res){ // see file "javascript_api_class"
     console.log('Email.Send Results');
     console.log(res);
 });
