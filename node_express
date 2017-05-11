@@ -1,0 +1,133 @@
+// ------------------------------------------------------
+//    Author: Todd Bagley
+//     Email: davidToddBagley@gmail.com
+//    Mobile: 949-275-3097
+// ------------------------------------------------------
+
+//
+// ------------------------------------------------------------------------------
+//
+// HTTP SERVERS
+//
+// ------------------------------------------------------------------------------
+//
+var EXPRESS 			    = require('express')
+  , FS                = require('fs')
+  , HTTP 					    = require('http')
+  , HTTPS             = require('https')
+  , HTTP_PORT 				= 8080
+  , HTTPS_PORT 				= 8443
+  , READ 					    = FS.readFileSync
+  , app               = EXPRESS()
+;
+
+app.get('*', function (req, res) {
+	console.log('get');
+	res.writeHead(200, {'Content-Type': 'text/html'});
+	var html = '<p>hello world</p>' ;
+	res.end(html);
+});
+
+app.post('*', function (req, res) {
+	console.log('post');
+	var data = { 
+					params: req.params 
+				,  results: 'hello world'
+			}
+	;
+	res.json(data);
+});
+
+HTTP.createServer(app, function (req, res) {
+	res.writeHead(200, {'Content-Type': 'text/plain'});
+	res.end('Hello world!\n');
+}).listen(HTTP_PORT,function(){
+    console.log('http listening to port ' + HTTP_PORT);  
+});
+
+// var ssl = {
+//                  key : READ('./ssl/serverDedicated.key')
+//               , cert : READ('./ssl/domain.com.crt')
+//               ,   ca : READ('./ssl/ca.crt')
+//   		}
+// ;
+// HTTPS.createServer(ssl, app, function (err) {
+// 	if (err) {
+// 		console.log('HTTPS error');
+// 		return console.log(err);
+// 	}
+// }).listen(HTTPS_PORT, function(){
+// 	console.log('https listening to port '+HTTPS_PORT);
+// });
+//
+// ------------------------------------------------------------------------------
+//
+
+
+
+//
+// ------------------------------------------------------------------------------
+//
+// TCP LISTENER
+//
+// ------------------------------------------------------------------------------
+//
+var TCP_NET            = require('net')
+  , TCP_PORT           = 9000
+;
+
+TCP_NET.createServer(function(tcp) {
+    
+    console.log('CONNECTED: ' + tcp.remoteAddress +':'+ tcp.remotePort);
+    
+    tcp.on('data', function(data) {
+        console.log('DATA ' + tcp.remoteAddress + ': ' + data);
+        tcp.write('echoing "' + data + '"');
+    });
+    
+    tcp.on('close', function(data) {
+        console.log('CLOSED: ' + tcp.remoteAddress +' '+ tcp.remotePort);
+    });
+    
+}).listen(TCP_PORT,function(){
+
+    console.log('tcp listening to port ' + TCP_PORT);
+
+});
+
+//
+// ------------------------------------------------------------------------------
+//
+
+
+
+//
+// ------------------------------------------------------------------------------
+//
+// UDP LISTENER
+//
+// ------------------------------------------------------------------------------
+//
+var DGRAM 					   = require('dgram')
+  , UDP_LISTENER 			 = DGRAM.createSocket('udp4')
+  , UDP_PORT           = 51271
+;
+
+UDP_LISTENER.on('error', (err) => {
+  console.log("udp listener error: "+err.stack);
+  UDP_LISTENER.close();
+});
+
+UDP_LISTENER.on('message', (payload, remoteDevice) => {
+  console.log("udp listener: "+payload+", from "+remoteDevice.address+":"+remoteDevice.port);
+});
+
+UDP_LISTENER.on('listening', () => {
+  var address = UDP_LISTENER.address();
+  console.log("udp listening to port "+address.port);
+});
+
+UDP_LISTENER.bind(UDP_PORT);
+//
+// ------------------------------------------------------------------------------
+//
