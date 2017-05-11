@@ -1,1 +1,73 @@
+// ------------------------------------------------------
+//    Author: Todd Bagley
+//     Email: davidToddBagley@gmail.com
+//    Mobile: 949-275-3097
+// ------------------------------------------------------
 
+var Email = {}
+  , SG                  = require('sendgrid')('************ KEY GOES HERE ************')
+  , SG_MAILER           = require('sendgrid').mail
+;
+
+global Email = Email ;
+
+$.extend(Email,{
+
+    init: function(){
+        console.log('Email loaded');
+    },
+
+    Send: function(from,to,subject,ascii,html,callback){
+        // console.log('Email.Send');
+        if((to)&&(subject)&&((ascii)||(html))){
+
+           from_email = new SG_MAILER.Email(from);
+             to_email = new SG_MAILER.Email(to);
+              subject = subject;
+              if(html){
+                content = new SG_MAILER.Content("text/html", html);
+              } else {
+                content = new SG_MAILER.Content("text/plain", ascii);
+              }
+
+          if(to){
+             to_email = new SG_MAILER.Email(to);
+          }
+          if(subject){
+              subject = subject;
+          }
+          if(html){
+            var html_header = '<table style="width:100%;"><tbody><tr><td align="right"><img height="80px" src="http://spectz.com/img/email80.gif"></td></tr><tr><td bgcolor="#ffcc00" style="font-size:1px;height:1px;">&nbsp;</td></tr></tbody></table><br>' 
+              , html_footer = '<p>&nbsp;<p><table style="width:100%;"><tbody><tr><td align="center" bgcolor="#b3b3b3" style="height:30px;"><a href="https://SPECTz.com" style="font-style:normal;"><span style="color:#ffffff;font-size:18px;font-style:normal;" target="_SPECTz">INSPECT WHAT TO EXPECT &trade;</span></a></td></tr></tbody></table><br>' 
+            ; 
+
+              content = new SG_MAILER.Content("text/html", html_header+html+html_footer);
+          } else if(ascii){
+              content = new SG_MAILER.Content("text/plain", ascii+"\r\n---------------------------------------------------------\r\nSPECTz - INSPECT WHAT TO EXPECT (TM) - https://SPECTz.com");
+          }
+
+                 mail = new SG_MAILER.Mail(from_email, subject, to_email, content);
+
+          var request = SG.emptyRequest({
+                                            method: 'POST'
+                                          , path: '/v3/mail/send'
+                                          , body: mail.toJSON()
+          });
+
+          SG.API(request,function(error,response) {
+            // console.log('Mail.Send::response.statusCode: '+response.statusCode);
+            // console.log(response.body);
+            // console.log(response.headers);
+            var sendgrid = {
+                                error: error
+                           , response: response
+              }
+            ;
+            callback(sendgrid);
+          })
+
+        }
+
+    }
+
+});
