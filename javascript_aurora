@@ -31,3 +31,19 @@ DBR.connect(function(err) {
   }
 });
 global.DBR = DBR ;
+
+//
+//------------------------------------------------------------------------
+//
+
+var phone = '949-275-3097'
+  , query = "UPDATE BAGLEY.todd SET phone = '"+phone+"' WHERE rrn = '1'" ;
+;
+DBM.query(query, function(err, results) {
+    if(err){
+        console.log('mysql master query failed...');
+        console.log(err);
+    } else {
+        console.log('mysql master query successful');
+    }
+});
