@@ -1,0 +1,338 @@
+var SYS    = {
+	                                         async : require("async")
+			 ,              aurora_master_endpoint : ''
+			 ,              aurora_master_password : ''
+			 ,              aurora_master_username : ''
+			 ,                aurora_read_endpoint : ''
+			 ,                aurora_read_password : ''
+			 ,                aurora_read_username : ''
+			 ,                        authorizenet : {
+						                                 ApiContracts : require('authorizenet').APIContracts
+						                             , ApiControllers : require('authorizenet').APIControllers
+						                             ,          utils : require(__dirname+'/sys/_server/authorizenet.utils.js')
+						                             ,      constants : require(__dirname+'/sys/_server/authorizenet.constants.js')
+						                           }
+       ,                               babel : require("babel-core").transform("code", '')
+       ,                         body_parser : require('body-parser')
+			 ,                               crypt : '[customized string here]'
+			 ,                               debug : 0
+			 ,                                exec : require('child_process').exec
+			 ,                             express : require('express')
+       ,                                  fs : require('fs')
+			 ,                            geocodio : require('geocodio')
+       ,                    geocodio_api_key : {
+						                               api_key : '[api key string here]'
+						                           }
+       ,                                gulp : require('gulp')
+       ,                          gulp_watch : require('gulp-watch')
+			 ,                                html : ''
+			 ,                                http : require('http')
+			 ,                               https : require('https')
+			 ,                               jsdom : require('jsdom').jsdom
+			 ,                                mode : 'development'
+			 ,                               mysql : require('mysql')
+			 ,                                path : __dirname
+			 ,                           port_http : 8080
+			 ,                          port_https : 8443
+			 ,                         querystring : require('querystring')
+			 ,                             request : require('request')
+			 ,                                salt : '[salt string here]'
+			 ,                            sendgrid : require('sendgrid')('[api key string here]')
+			 ,                     sendgrid_mailer : require('sendgrid').mail
+			 ,                             timeout : 1000
+			 ,                                 url : require('url')
+			 ,                               utils : require('utils')
+  }
+;
+
+///////////////////////////////////////////////////////////////////////////////
+
+switch(SYS.mode){
+  //
+  case         'prod' :
+  case   'production' : SYS.aurora_master_endpoint = '[AWS Aurora Master Endpoint Here]' ;
+                        SYS.aurora_master_username = '[AWS Aurora Master Endpoint Username Here]' ;
+                        SYS.aurora_master_password = '[AWS Aurora Master Endpoint Password Here]' ;
+                        SYS.aurora_read_endpoint   = '[AWS Aurora Slave Endpoint Here]' ;
+                        SYS.aurora_read_username   = '[AWS Aurora Slave Endpoint Username Here]' ;
+                        SYS.aurora_read_password   = '[AWS Aurora Slave Endpoint Password Here]' ;
+                        SYS.debug                  = 0 ;
+                        break;
+  //
+            case 'qa' : SYS.aurora_master_endpoint = '[AWS Aurora Master Endpoint Here]' ;
+                        SYS.aurora_master_username = '[AWS Aurora Master Endpoint Username Here]' ;
+                        SYS.aurora_master_password = '[AWS Aurora Master Endpoint Password Here]' ;
+                        SYS.aurora_read_endpoint   = '[AWS Aurora Slave Endpoint Here]' ;
+                        SYS.aurora_read_username   = '[AWS Aurora Slave Endpoint Username Here]' ;
+                        SYS.aurora_read_password   = '[AWS Aurora Slave Endpoint Password Here]' ;
+                        SYS.debug                  = 1 ;
+                        break;
+  //
+              default : SYS.aurora_master_endpoint = '[AWS Aurora Master Endpoint Here]' ;
+                        SYS.aurora_master_username = '[AWS Aurora Master Endpoint Username Here]' ;
+                        SYS.aurora_master_password = '[AWS Aurora Master Endpoint Password Here]' ;
+                        SYS.aurora_read_endpoint   = '[AWS Aurora Slave Endpoint Here]' ;
+                        SYS.aurora_read_username   = '[AWS Aurora Slave Endpoint Username Here]' ;
+                        SYS.aurora_read_password   = '[AWS Aurora Slave Endpoint Password Here]' ;
+                        SYS.debug                  = 2 ;
+                        break;
+  //
+}
+
+if(SYS.debug>1){
+	console.log('SYS.mode: "'+SYS.mode+'"');
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+var app                 = SYS.express()
+  , apps                = SYS.express()
+  , doc                 = SYS.jsdom(SYS.html)
+  , window              = doc.parentWindow
+  , $                   = require('jquery')(window);
+;
+
+SYS.geocoder            = new SYS.geocodio(SYS.geocodio_api_key)
+
+///////////////////////////////////////////////////////////////////////////////
+
+SYS.db_master = SYS.mysql.createConnection({
+											          host : SYS.aurora_master_endpoint
+											    ,     user : SYS.aurora_master_username
+											    , password : SYS.aurora_master_password
+											    ,     port : 3306
+});
+SYS.db_master.connect(function(err) {
+	if(SYS.debug>1){
+		if (err) {
+			console.log('DEV mysql aurora MASTER connection failed...')
+			console.log(err);
+			throw err
+		} else {
+			console.log('SYS.mysql aurora MASTER connection running...')
+		}
+	}
+});
+
+SYS.db_read = SYS.mysql.createConnection({
+											          host : SYS.aurora_read_endpoint
+											    ,     user : SYS.aurora_read_username
+											    , password : SYS.aurora_read_password
+											    ,     port : 3306
+});
+SYS.db_read.connect(function(err) {
+	if(SYS.debug>1){
+		if (err) {
+			console.log('DEV mysql aurora READ connection failed...')
+			console.log(err);
+			throw err
+		} else {
+			console.log('SYS.mysql aurora READ connection running...')
+		}
+	}
+});
+
+///////////////////////////////////////////////////////////////////////////////
+
+require("babel-core").transform("code", {
+  presets: ["react"]
+});
+var unique = require('uniq');
+if(SYS.debug>1){
+	var data = [1, 2, 2, 3, 4, 5, 5, 5, 6];
+	console.log(unique(data));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+if(SYS.debug>1){
+    console.log('reloadify');
+  	SYS.clientScript 	= SYS.fs.readFileSync(SYS.path+'/sys/_server/client-script.js', 'utf8')
+    SYS.ejs          	= require('ejs')
+    SYS.path2        	= require('path')
+    SYS.polyfill     	= SYS.fs.readFileSync(SYS.path+'/sys/_server/eventsource-polyfill.js', 'utf8')
+    SYS.reloadifyDns	= 'app'
+    SYS.reloadify    	= require('reloadify')(SYS.path+'/dns/'+SYS.reloadifyDns)
+    SYS.sendevent    	= require('sendevent')
+    SYS.uglify       	= require('uglify-js')
+    SYS.watch        	= require('watch')
+    SYS.watchscript  	= SYS.uglify.minify(SYS.polyfill + SYS.clientScript, { fromString: true }).code ;
+    //
+    Reloadify(app, SYS.path+'/dns/'+SYS.reloadifyDns+'/js');
+    app.engine('html', SYS.ejs.renderFile);
+    app.set('views', SYS.path2.join(SYS.path+'/dns/'+SYS.reloadifyDns, 'views'));
+    app.set('view engine', 'html');
+    //
+    function Reloadify(apps, dir) {
+      console.log('Reloadify');
+      if (SYS.mode !== 'development') {
+        console.log('safety');
+      	apps.locals.watchScript = '';
+        return;
+      }
+      SYS.events = SYS.sendevent(SYS.path+'/eventstream');
+      app.use(SYS.reloadify);
+      app.use(SYS.events);
+      SYS.watch.watchTree(dir, function (f, curr, prev) {
+	    console.log('reload - '+SYS.path+'/eventstream');
+      	SYS.events.broadcast({ msg: 'reload' });
+      });
+    }
+    //
+    // module.exports = SYS.reloadify;
+    //
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+global.$ 	            = $ ;
+global.document       = doc ;
+global.SYS = SYS ;
+
+///////////////////////////////////////////////////////////////////////////////
+
+var CryptMD5 = require(__dirname+'/sys/_server/php-crypt-md5.js');
+global.CryptMD5 = CryptMD5;
+
+require(__dirname+'/sys/_server/sha1.js');
+require(__dirname+'/sys/_server/authorizenet.js');
+require(__dirname+'/sys/_server/docusign.js');
+require(__dirname+'/sys/_server/sendgrid.js');
+
+require(__dirname+'/sys/_server/core.js');
+require(__dirname+'/sys/_server/data.js');
+require(__dirname+'/sys/_server/email.js');
+require(__dirname+'/sys/_server/post.js');
+require(__dirname+'/sys/_server/sql.js');
+
+///////////////////////////////////////////////////////////////////////////////
+
+app.post('*', function (req, res){
+	Core.Env(req, function(env){
+		var dts = new Date();
+		if(SYS.debug){
+			console.log('***  app.post *** '+dts+'  *** '+env.remote_address+'  *** '+env.uri+' ***');
+		}
+	    var data                = ''
+	      , params              = ''
+	    ;
+	    req.on('data', function(chunk) {
+	        data += chunk.toString();
+	    });
+	    req.on('end', function() {
+	    	if(SYS.debug>1){
+		        console.log('data: '+data);
+	    	}
+	        var items = data.split('&')
+	          , pairs = []
+	        ;
+	        $.each(items,function(k,item){
+		        if(item){
+		            var pair = item.split('=');
+		            pairs[pair[0]] = decodeURIComponent(pair[1]) ;
+		        }
+	        });
+	        Data.Device(pairs.device, function(device) {
+		        Data.Session(device,pairs.session,function(session){
+		            var client = {
+		                 			 device: device
+					              , session: session.session
+					              , user_id: session.user_id
+		              			}
+		              ,   post = {
+					                 function: ''
+					              ,    params: ''
+		            			}
+		              ,   user = session
+		            ;
+		            delete user.key;
+		            if(pairs){
+		                post.mode = pairs.mode ;
+		                post.function = pairs.function;
+		                if(pairs.params){
+		                	var buf = pairs.params.split('&')
+		                	  , kv = []
+		                	  , obj = {}
+		                	;
+		                	$.each(buf,function(k,v){
+		                		kv = v.split('=');
+		                		if((kv[0])&&(kv[1])){
+			                		obj[kv[0]] = kv[1] ;
+			                	}
+		                	});
+		                	post.params = obj;
+		                }
+		            }
+					if(SYS.debug>1){
+			            console.log('post');
+			            console.log(post);
+			            console.log('pairs');
+			            console.log(pairs);
+					}
+		        	SYS.fs.appendFile(SYS.path+'/log/spectz',dts+' - apps.post - '+SYS.mode+' - '+req.socket.server._connectionKey+' - '+env.remote_address+' - h:'+env.host+', u:'+env.uri+':'+post.function+"\r\n",function(err){
+		                Post.Process(env,client,post,function(data) {
+			                // Data.CurrentLocation(session,function(location) {
+			                //     user.location = location ;
+			                    var obj = {
+			                    			  client: client
+			                    		  ,     data: data
+			                    		  ,     post: post
+			                    		  ,     user: user
+			                    	}
+			                    ;
+			                    console.log('443 JSON '+env.now+' from '+env.remote_address+' - h:'+env.host+', u:'+env.uri+' *** '+post.function);
+			                    res.json(obj);
+			                // });
+		                });
+		            });
+				});
+			});
+		});
+	});
+});
+
+app.get('*', function (req, res){
+	Core.Env(req, function(env){
+		if(((SYS.debug)&&(env.uri=='/'))||(SYS.debug>1)){
+			var dts = new Date();
+			console.log('***  app.get  *** '+dts+'  *** '+env.remote_address+'  *** '+env.uri+' ***');
+			SYS.debug = 1 ;
+		}
+		Core.Path(env,function(n, type, data, mode){
+			res.writeHead(n, type);
+            res.end(data, mode);
+		});
+	});
+});
+
+apps.post('*', function (req, res){
+	Core.Env(req, function(env){
+		if(SYS.debug){
+			var dts = new Date();
+			console.log('*** apps.post *** '+dts+'  *** '+env.remote_address+'  *** '+env.uri+' ***');
+		}
+		Core.Path(env,function(n, type, data, mode){
+			res.writeHead(n, type);
+            res.end(data, mode);
+		});
+	});
+});
+
+apps.get('*', function (req, res){
+	Core.Env(req, function(env){
+		if(((SYS.debug)&&(env.uri=='/'))||(SYS.debug>1)){
+			var dts = new Date();
+			console.log('*** apps.get  *** '+dts+'  *** '+env.remote_address+'  *** '+env.uri+' ***');
+		}
+		Core.Path(env,function(n, type, data, mode){
+			res.writeHead(n, type);
+            res.end(data, mode);
+		});
+	});
+});
+
+///////////////////////////////////////////////////////////////////////////////
+
+SYS.http.createServer(app, function (err) {
+	console.log('Listening on port', SYS.port_http);
+}).listen(SYS.port_http);
