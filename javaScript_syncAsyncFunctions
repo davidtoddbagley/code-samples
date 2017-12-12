@@ -1,3 +1,17 @@
+<html>
+    <head>
+        
+    </head>
+    <body>
+        <div id="output">output</div>
+        <script src="app.js"></script>
+    </body>
+</html>
+
+
+
+// begin "app.js" ////////////////////////////////////////////////////////////// 
+
 var cnt = 0;
 var myVar = 'hi world';
 
