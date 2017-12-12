@@ -1,0 +1,28 @@
+var cnt = 0;
+var myVar = 'hi world';
+
+function helloWorld() {
+    myVar = 'Hello World';
+}
+
+function asyncFunc(callback) {
+    helloWorld();
+    callback('here is the callback');
+}
+
+function updateDom() {
+    cnt++;
+    var eid = document.getElementById("output");
+    eid.innerHTML = myVar + ' (' + cnt + ')';
+}
+
+function asyncCall() {
+    asyncFunc(function (res) { 
+        console.log(res + ' - wow!'); 
+    });
+    updateDom();
+}
+
+updateDom();
+
+setTimeout(`asyncCall()`,2000);
