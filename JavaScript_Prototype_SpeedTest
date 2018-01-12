@@ -1,0 +1,20 @@
+function SpeedTest(code, params, reps){
+  this.code = code;
+  this.params = params;
+  this.reps = reps;
+  this.avg = 0;
+}
+
+SpeedTest.prototype = {
+  startTest: function() {
+    var b, e, t = 0;
+    for(var = 0, x = this.reps; i < x; i++;){
+      b = +new Date();
+      this.code(this.params);
+      e = +new Date();
+      t = e - b;
+    }
+    this.avg = t / this.reps;
+    return console.log("Avg exe time: "+this.avg+", Reps: "+this.reps);
+  }
+}
