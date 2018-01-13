@@ -1,0 +1,14 @@
+var NAMESPACE = (function(){
+
+  var privateArray = [];
+  var privateObj = {};
+  
+  var privateMethod = function(){};
+
+  return {
+    publicMethod: function(){};
+  };
+
+})();
+
+// public method has access to private method and properties in the namespace
