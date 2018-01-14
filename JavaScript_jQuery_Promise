@@ -5,6 +5,9 @@ var Promise = {
      data: {q: params},
      success: function(res){
        promise.resolve(res.key);
+     },
+     error: function(e){
+       promise.reject('error message here');
      }
     });
     return promise;
