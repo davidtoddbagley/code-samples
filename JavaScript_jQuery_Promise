@@ -1,0 +1,12 @@
+var Promise = {
+  getData: function(params){
+    var promise = $.Deferred();
+    $.ajax('/api', {
+     data: {q: params},
+     success: function(res){
+       promise.resolve(res.key);
+     }
+    });
+    return promise;
+  }
+}
