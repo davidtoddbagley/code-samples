@@ -1,0 +1,7 @@
+function knode() {
+    PIDS=(`ps aux | grep node | grep -v grep | awk -F ' ' '{print $2}'`)
+    for PID in "${PIDS[@]}"
+    do
+        sudo kill -9 $PID
+    done
+}
